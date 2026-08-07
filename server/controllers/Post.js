@@ -24,7 +24,7 @@ exports.createPost = async (req, res) => {
             color
         } = req.body;
      
-        const userId = req?.body?.userId || req?.user?.id
+        const userId = req?.body?.userId || req?.user?.id || req?.user?._id;
         const name = req?.body?.name
 
         if (!userId || !description) {
@@ -38,10 +38,10 @@ exports.createPost = async (req, res) => {
         const userPost = await Post.find({ author: userId }).sort({ createdAt: -1 });
         const currentTime = Date.now();
 
-        if (userPost.length > 5 && currentTime - userPost[4].createdAt < 86400000) {
+        if (userPost.length > 20 && currentTime - userPost[19].createdAt < 86400000) {
             return res.status(403).json({
                 success: false,
-                message: "You can only post 5 times a day"
+                message: "You can only post 20 times a day"
             })
         }
 
@@ -84,7 +84,7 @@ exports.createPost = async (req, res) => {
         });
         
         /*******************************************************Redis****************************************************************/
-        const firstName = name.split(" ")[0].toLowerCase();
+        const firstName = name ? name.split(" ")[0].toLowerCase() : "";
         const userPosts = Number.parseInt(await client.get(`user:${userId}:totalPosts`)) || 0;
         await client.set(`user:${userId}:totalPosts`, (userPosts + 1));
 
@@ -149,7 +149,7 @@ exports.createPost = async (req, res) => {
                     body: `This confession by ${updatedUser?.username} might be for you `,
                 },
                 data: {
-                    url: `http://localhost:3000/feed/${post._id}`
+                    url: `http://localhost:1001/feed/${post._id}`
                 }
             }
 
@@ -294,13 +294,6 @@ exports.editPost = async (req, res) => {
                 posts
             })
         }
-        // const posts = Post.find({})
-        // .populate("author")
-        // .populate({
-        //     path: "likes"
-        // })
-        // .sort({ createdAt: -1 })
-        // .exec();
 
         return res.status(200).json({
             success: true,
@@ -397,7 +390,6 @@ exports.deletePost = async (req, res) => {
         })
         /*******************************************************FireStore code ends here*********************************************************/
         
-        // const posts = await Post.find().sort({ createdAt: -1 }).populate('author').exec();
         return res.status(200).json({
             success: true,
             message: "Post has been deleted succesfully",
@@ -609,9 +601,6 @@ exports.getUserPostsStats = async (req, res) => {
             commentsLength += post?.comments?.length
 
         })
-
-
-
 
         const data = {
             postLength: postLength,

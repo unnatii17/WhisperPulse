@@ -20,7 +20,6 @@ export function getUserPosts(userId,count,token){
     return async(dispatch)=>{
         try{    
             const response=await apiConnector("GET",GET_USER_POSTS_API,null, {
-                "Content-Type": "multipart/form-data",
                  Authorization: `Bearer ${token}`,
                  userId:userId,
                  count:count,
@@ -63,7 +62,6 @@ export function getPosts (count,token) {
         dispatch(setLoading(true))
         try {
             const response = await apiConnector("GET",GET_POST_API,null, {
-               "Content-Type": "multipart/form-data",
                 Authorization: `Bearer ${token}`,
                 count:count,
             })
@@ -90,9 +88,9 @@ export function createPost (token, data) {
     return async(dispatch) => {
         dispatch(setLoading(true))
         try {
-            const response = await apiConnector("POST",CREATE_POST_API, data, {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
+            const cleanToken = token ? token.toString().replace(/^"(.*)"$/, '$1') : token;
+            const response = await apiConnector("POST", CREATE_POST_API, data, {
+                Authorization: `Bearer ${cleanToken}`,
             })
 
         
@@ -107,7 +105,9 @@ export function createPost (token, data) {
         
         } catch (err) {
             console.log("CREATE_POST_API FAILED....", err)
-            toast.error("Could not create post")
+            console.log("Server error response data:", err.response?.data)
+            const message = err.response?.data?.message || err.message || "Could not create post";
+            toast.error(message)
 
         } finally {
             dispatch(setLoading(false))
@@ -121,7 +121,6 @@ export function editPost (token, data) {
         try {
             const response = await apiConnector("POST",EDIT_POST_API, data, {
                 Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
             })
 
             if(!response.data.success) {
@@ -146,7 +145,6 @@ export function deletePost (token, data) {
         try {
             const response = await apiConnector("POST",DELETE_POST_API, data, {
                 Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
             })
 
         
@@ -175,7 +173,6 @@ export function reportPost (token, data) {
         try {
             const response = await apiConnector("POST",REPORT_POST_API, data, {
                 Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
             })
 
         

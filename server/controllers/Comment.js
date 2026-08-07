@@ -92,7 +92,7 @@ exports.createComment = async (req, res) => {
                        
                     },
                     data:{
-                        url:`http://localhost:3000/feed/${postId}`
+                        url:`http://localhost:1001/feed/${postId}`
                     }
                 }
         

@@ -4,6 +4,7 @@ import { setToken } from '../slices/authSlice';
 import { store } from '../index';
 import {toast} from "react-hot-toast";
 export const axiosInstance = axios.create({
+  baseURL:"http://localhost:9001/api/v1",  
   withCredentials: true, 
 });
 
