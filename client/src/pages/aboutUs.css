@@ -1,0 +1,279 @@
+/* About Us Page Modern Glassmorphic Styles */
+
+.aboutus-page {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  flex-direction: column;
+  color: #1f2937;
+  background: radial-gradient(circle at 50% 0%, #fdfbf7 0%, #eef2ff 50%, #f3e8ff 100%);
+  scroll-behavior: smooth;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+.dark .aboutus-page {
+  color: #f9fafb;
+  background: radial-gradient(circle at 50% 0%, #0f172a 0%, #111827 50%, #1e1b4b 100%);
+}
+
+.aboutus-bg {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.15), transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 40%),
+    radial-gradient(circle at 50% 80%, rgba(245, 158, 11, 0.12), transparent 45%);
+  animation: aboutus-pulse 10s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+@keyframes aboutus-pulse {
+  0% { transform: scale(1) translateY(0); opacity: 0.8; }
+  100% { transform: scale(1.05) translateY(-10px); opacity: 1; }
+}
+
+.aboutus-hero {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 1rem 2rem 1rem;
+  min-h: 70vh;
+  justify-content: center;
+}
+
+.aboutus-social-links {
+  display: flex;
+  gap: 1.25rem;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.aboutus-social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #4f46e5;
+}
+
+.dark .aboutus-social-link {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #a5b4fc;
+}
+
+.aboutus-social-link:hover {
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: 0 14px 28px rgba(99, 102, 241, 0.3);
+}
+
+.aboutus-badge-container {
+  margin-bottom: 1rem;
+}
+
+.aboutus-badge {
+  display: inline-block;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  backdrop-filter: blur(8px);
+}
+
+.dark .aboutus-badge {
+  background: rgba(165, 180, 252, 0.15);
+  color: #c7d2fe;
+  border-color: rgba(165, 180, 252, 0.3);
+}
+
+.aboutus-title {
+  font-size: 3.25rem;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .aboutus-title {
+    font-size: 4.5rem;
+  }
+}
+
+.aboutus-title-gradient {
+  background: linear-gradient(135deg, #4f46e5 0%, #ec4899 50%, #f59e0b 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+@keyframes shimmer {
+  to { background-position: 200% center; }
+}
+
+.aboutus-description {
+  max-width: 42rem;
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: #4b5563;
+  margin: 0 auto 2.5rem auto;
+}
+
+.dark .aboutus-description {
+  color: #d1d5db;
+}
+
+.aboutus-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.aboutus-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.dark .aboutus-feature {
+  background: rgba(31, 41, 55, 0.75);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f3f4f6;
+}
+
+.aboutus-creator-tag {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.creator-name {
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+/* Sections Styling */
+.aboutus-mission, .aboutus-stats, .aboutus-team, .aboutus-feedback, .aboutus-coffee {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+}
+
+.aboutus-info-card {
+  position: relative;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 2.5rem;
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.dark .aboutus-info-card {
+  background: rgba(17, 24, 39, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.aboutus-info-image-wrapper {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  margin: 0 auto 1.5rem auto;
+}
+
+.aboutus-info-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #6366f1;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+.aboutus-info-name {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.aboutus-info-description {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.dark .aboutus-info-description {
+  color: #9ca3af;
+}
+
+.aboutus-info-social {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.aboutus-info-social-link {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+  font-size: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.dark .aboutus-info-social-link {
+  background: rgba(255, 255, 255, 0.1);
+  color: #a5b4fc;
+}
+
+.aboutus-info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+}

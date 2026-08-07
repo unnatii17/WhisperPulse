@@ -1,0 +1,27 @@
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    ports:
+      - "9001:9001"
+    env_file:
+      - ./server/.env
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    ports:
+      - "1001:1001"
+    env_file:
+      - ./client/.env
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - server
+    stdin_open: true

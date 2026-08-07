@@ -1,0 +1,288 @@
+/* PINK */
+    .light1{
+        background: #ee9ca7;  /* fallback for old browsers */
+        background: -webkit-linear-gradient(to right, #ffdde1, #ee9ca7);  /* Chrome 10-25, Safari 5.1-6 */
+        background: linear-gradient(to right, #ffdde1, #ee9ca7); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    }
+
+    .dark1 {
+        background: #FF0099;  /* fallback for old browsers */
+        background: -webkit-linear-gradient(to right, #493240, #FF0099);  /* Chrome 10-25, Safari 5.1-6 */
+        background: linear-gradient(to right, #493240, #FF0099); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    }
+
+
+/* BLUE */
+.light2 {
+    background: #2980B9;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #FFFFFF, #6DD5FA, #2980B9);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #FFFFFF, #6DD5FA, #2980B9); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.dark2 {
+    background: #373B44;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #4286f4, #373B44);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #4286f4, #373B44); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+/* RED */
+.light3 {
+    background: #EF3B36;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #FFFFFF, #EF3B36);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #FFFFFF, #EF3B36); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.dark3 {
+    background: #CB356B;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #BD3F32, #CB356B);  /* Chrome 10-25, Safari 5.1-6 */ 
+    background: linear-gradient(to right, #BD3F32, #CB356B); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+/* PURPLISH BLUE */
+.light4{
+    background: #ef32d9;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #89fffd, #ef32d9);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #89fffd, #ef32d9); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.dark4 {
+    background: #ff00cc;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #333399, #ff00cc);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #333399, #ff00cc); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+/* GREEN */
+.light5 {
+    background: #43C6AC;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #faffc5, #73f7dc);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #F8FFAE, #43C6AC); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.dark5 {
+    background: #00bf8f;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #001510, #00bf8f);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #001510, #00bf8f); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+/* YELLLOW */
+.light6 {
+    background: #fceabb;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #f8b500, #fceabb);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #ffcf4c, #fceabb); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.dark6 {
+    background: #FDC830;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #F37335, #FDC830);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #F37335, #FDC830); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+
+
+:root {
+    --bg-1:linear-gradient(90deg, hsla(1, 84%, 80%, 1) 0%, hsla(56, 100%, 50%, 1) 100%);
+    --bg-2:linear-gradient(90deg, hsla(303, 79%, 76%, 1) 0%, hsla(360, 86%, 67%, 1) 100%);
+    --bg-3:linear-gradient(90deg, hsla(347, 89%, 61%, 1) 0%, hsla(242, 42%, 40%, 1) 100%);
+    --bg-4:linear-gradient(90deg, hsla(47, 100%, 87%, 1) 0%, hsla(334, 81%, 60%, 1) 50%, hsla(237, 64%, 56%, 1) 100%);
+    --bg-5:linear-gradient(90deg, hsla(348, 88%, 66%, 1) 0%, hsla(36, 89%, 68%, 1) 100%);
+    --bg-6:linear-gradient(to right, #333399, #ff00cc);
+  }
+
+
+  .border {
+    border: 1px solid gray;
+  }
+  
+  .border:focus {
+    border: 2px solid rgb(249, 249, 255);
+    outline: none; 
+  }
+
+/* Enhanced gradient classes for feed posts */
+.bg-1 {
+    background: linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%);
+}
+
+.dark .bg-1 {
+    background: linear-gradient(135deg, #FF0099 0%, #493240 100%);
+}
+
+.bg-2 {
+    background: linear-gradient(135deg, #2980B9 0%, #6DD5FA 50%, #FFFFFF 100%);
+}
+
+.dark .bg-2 {
+    background: linear-gradient(135deg, #373B44 0%, #4286f4 100%);
+}
+
+.bg-3 {
+    background: linear-gradient(135deg, #EF3B36 0%, #FFFFFF 100%);
+}
+
+.dark .bg-3 {
+    background: linear-gradient(135deg, #CB356B 0%, #BD3F32 100%);
+}
+
+.bg-4 {
+    background: linear-gradient(135deg, #ef32d9 0%, #89fffd 100%);
+}
+
+.dark .bg-4 {
+    background: linear-gradient(135deg, #ff00cc 0%, #333399 100%);
+}
+
+.bg-5 {
+    background: linear-gradient(135deg, #43C6AC 0%, #F8FFAE 100%);
+}
+
+.dark .bg-5 {
+    background: linear-gradient(135deg, #00bf8f 0%, #001510 100%);
+}
+
+.bg-6 {
+    background: linear-gradient(135deg, #fceabb 0%, #ffcf4c 100%);
+}
+
+.dark .bg-6 {
+    background: linear-gradient(135deg, #FDC830 0%, #F37335 100%);
+}
+
+/* Animated gradient background */
+.background-animate {
+    background-size: 200% 200%;
+    animation: gradient-animation 3s ease infinite;
+}
+
+@keyframes gradient-animation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.gradient-box {
+    position: relative;
+    overflow: hidden;
+}
+
+.gradient-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.3) 360deg);
+    animation: rotate 4s linear infinite;
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Professional feed enhancements */
+.post-content {
+    transition: all 0.3s ease;
+}
+
+.post-content:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.like-button {
+    transition: all 0.2s ease;
+}
+
+.like-button:hover {
+    transform: scale(1.2);
+}
+
+.like-button:active {
+    transform: scale(0.9);
+}
+
+.comment-section {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Scrollbar styling for feed */
+#scrollableDiv::-webkit-scrollbar {
+    width: 12px;
+}
+
+#scrollableDiv::-webkit-scrollbar-track {
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 6px;
+}
+
+#scrollableDiv::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 6px;
+    border: 2px dashed #a78bfa;
+}
+
+#scrollableDiv::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2, #667eea);
+}
+
+.dark #scrollableDiv::-webkit-scrollbar-track {
+    background: rgba(168, 85, 247, 0.1);
+}
+
+.dark #scrollableDiv::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #a78bfa, #667eea);
+    border: 2px dashed #c4b5fd;
+}
+
+.dark #scrollableDiv::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #c4b5fd, #a78bfa);
+}
+
+/* Artistic patterns */
+.artistic-pattern {
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+}
+
+.dashed-border {
+  border: 3px dashed #a78bfa;
+  border-radius: 16px;
+}
+
+.artistic-shadow {
+  box-shadow: 
+    8px 8px 0px rgba(167, 139, 250, 0.3),
+    -8px -8px 0px rgba(236, 72, 153, 0.3);
+}
+
+.hand-drawn-corners {
+  border-radius: 16px 32px 16px 32px;
+}
+
+.skew-box {
+  transform: skew(-2deg);
+}
+
+.rotated-border {
+  transform: rotate(1deg);
+}
