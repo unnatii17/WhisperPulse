@@ -30,10 +30,13 @@ async function sendVerificationEmail(email, otp) {
     );
 
     console.log("OTP Mail Sent Successfully");
+
     return mailResponse;
   } catch (error) {
     console.error("MAIL ERROR:", error);
-    return null;
+
+    // Important: email fail hua to error ko hide mat karo
+    throw error;
   }
 }
 
@@ -41,11 +44,13 @@ async function sendVerificationEmail(email, otp) {
 otpSchema.pre("save", async function (next) {
   try {
     await sendVerificationEmail(this.email, this.otp);
-  } catch (err) {
-    console.error("OTP Email Error:", err);
-  }
 
-  next();
+    next();
+  } catch (error) {
+    console.error("OTP Email Error:", error);
+
+    next(error);
+  }
 });
 
 module.exports = mongoose.model("OTP", otpSchema);
