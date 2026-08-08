@@ -1,28 +1,23 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 require("dotenv").config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const mailSender = async (email, title, body) => {
   try {
-    await transporter.verify();
-    console.log("SMTP Connected Successfully");
-
-    const info = await transporter.sendMail({
-      from: process.env.MAIL_USER,
-      to: email,
+    const { data, error } = await resend.emails.send({
+      from: "WhisperPulse <onboarding@resend.dev>",
+      to: [email],
       subject: title,
       html: body,
     });
 
-    console.log("Mail Sent Successfully:", info.messageId);
-    return info;
+    if (error) {
+      throw error;
+    }
+
+    console.log("Mail Sent:", data);
+    return data;
   } catch (err) {
     console.error("MAIL ERROR:", err);
     throw err;
