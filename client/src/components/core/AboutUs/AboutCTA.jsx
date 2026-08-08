@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { FaHeart, FaTrophy, FaCoffee, FaImages } from "react-icons/fa";
+import { FaTrophy, FaCoffee, FaImages } from "react-icons/fa";
 
 const AboutCTA = () => {
   return (
