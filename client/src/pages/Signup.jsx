@@ -80,7 +80,7 @@ const Signup = () => {
         year: values.year,
       };
 
-      const verification = await dispatch(validateSignup(obj.email, obj.username));
+      const verification = await dispatch(validateSignup(obj.email, obj.username, obj.usn));
       if (verification) {
         dispatch(setSignupData(obj));
         dispatch(sendOtp(obj.email, navigate));
@@ -106,6 +106,8 @@ const Signup = () => {
       reset({
         email: "",
         name: "",
+        username: "",
+        usn: "",
         password: "",
         confirmPassword: "",
         branch: "",
@@ -250,6 +252,25 @@ const Signup = () => {
                       message: "Username should be under 15 chars"
                     },
                   })} 
+                />
+              </div>
+
+              <div className="w-full">
+                <SignUpInput
+                  name="USN"
+                  value="usn"
+                  required={true}
+                  type="text"
+                  error={errors?.usn}
+                  register={() =>
+                    register("usn", {
+                      required: "USN is required",
+                      maxLength: {
+                        value: 20,
+                        message: "USN should be under 20 characters",
+                      },
+                    })
+                  }
                 />
               </div>
 
