@@ -1,23 +1,31 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: process.env.MAIL_HOST,
+  port: Number(process.env.MAIL_PORT),
+  secure: false,
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+});
 
 const mailSender = async (email, title, body) => {
   try {
-    const { data, error } = await resend.emails.send({
-      from: "WhisperPulse <onboarding@resend.dev>",
-      to: [email],
+    await transporter.verify();
+    console.log("Brevo SMTP Connected Successfully");
+
+    const info = await transporter.sendMail({
+      from: `"WhisperPulse" <${process.env.MAIL_USER}>`,
+      to: email,
       subject: title,
       html: body,
     });
 
-    if (error) {
-      throw error;
-    }
+    console.log("Mail Sent:", info.messageId);
 
-    console.log("Mail Sent:", data);
-    return data;
+    return info;
   } catch (err) {
     console.error("MAIL ERROR:", err);
     throw err;
