@@ -7,10 +7,12 @@ const otpSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+
   otp: {
     type: String,
     required: true,
   },
+
   createdAt: {
     type: Date,
     default: Date.now,
@@ -31,9 +33,6 @@ async function sendVerificationEmail(email, otp) {
     return mailResponse;
   } catch (error) {
     console.error("MAIL ERROR:", error);
-
-    // IMPORTANT:
-    // Email fail hone par OTP save hone do
     return null;
   }
 }
