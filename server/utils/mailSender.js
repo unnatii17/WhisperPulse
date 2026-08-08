@@ -3,8 +3,9 @@ require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,
-  port: Number(process.env.MAIL_PORT),
+  port: Number(process.env.MAIL_PORT) || 587,
   secure: false,
+
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
@@ -13,7 +14,10 @@ const transporter = nodemailer.createTransport({
 
 const mailSender = async (email, title, body) => {
   try {
+    console.log("Connecting to Brevo SMTP...");
+
     await transporter.verify();
+
     console.log("Brevo SMTP Connected Successfully");
 
     const info = await transporter.sendMail({
@@ -23,12 +27,23 @@ const mailSender = async (email, title, body) => {
       html: body,
     });
 
-    console.log("Mail Sent:", info.messageId);
+    console.log("=================================");
+    console.log("OTP EMAIL SENT SUCCESSFULLY");
+    console.log("To:", email);
+    console.log("Message ID:", info.messageId);
+    console.log("=================================");
 
     return info;
-  } catch (err) {
-    console.error("MAIL ERROR:", err);
-    throw err;
+  } catch (error) {
+    console.error("=================================");
+    console.error("BREVO MAIL ERROR");
+    console.error("Code:", error.code);
+    console.error("Command:", error.command);
+    console.error("Response:", error.response);
+    console.error("Message:", error.message);
+    console.error("=================================");
+
+    throw error;
   }
 };
 
