@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 require("events").EventEmitter.defaultMaxListeners = 0;
 
-// importing routes
+// Import Routes
 const userRoutes = require("./routes/User");
 const postRoutes = require("./routes/Post");
 const likeRoutes = require("./routes/Like");
@@ -11,6 +11,7 @@ const replyRoutes = require("./routes/Reply");
 const feedbackRoutes = require("./routes/Feedback");
 const notificationRoutes = require("./routes/Notification");
 
+// Import Configs
 const database = require("./configs/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -22,30 +23,29 @@ dotenv.config();
 
 const PORT = process.env.PORT || 4000;
 
-// Database
+// Database Connection
 database.connect();
 
-// Cloudinary
+// Cloudinary Connection
 cloudinaryConnect();
 
-// Middleware
+// Middlewares
 app.use(express.json());
 app.use(cookieParser());
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      // Allow Postman, Mobile Apps, Curl
       if (!origin) return callback(null, true);
 
-      const allowedOrigins = [
-        "https://confetti-five.vercel.app",
-        "http://localhost:1001",
-      ];
+      // Allow Localhost
+      if (/^http:\/\/localhost:\d+$/.test(origin)) {
+        return callback(null, true);
+      }
 
-      if (
-        allowedOrigins.includes(origin) ||
-        /^http:\/\/localhost:\d+$/.test(origin)
-      ) {
+      // Allow Any Vercel Deployment
+      if (/^https:\/\/.*\.vercel\.app$/.test(origin)) {
         return callback(null, true);
       }
 
@@ -55,6 +55,7 @@ app.use(
   })
 );
 
+// File Upload
 app.use(
   fileUpload({
     useTempFiles: true,
@@ -73,7 +74,7 @@ app.use("/api/v1/notification", notificationRoutes);
 
 // Health Check
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     message: "Your server is up and running",
   });
