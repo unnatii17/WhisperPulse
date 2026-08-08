@@ -1,96 +1,133 @@
-const mongoose=require("mongoose");
+const mongoose = require("mongoose");
 
-const UserSchema=new mongoose.Schema({
-    name:{
-        type:String,
-        required:true,
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
     },
-    username:{
-        type:String,
-        required:true,
+
+    username: {
+      type: String,
+      required: true,
     },
-    usn:{
-        type:String,
+
+    usn: {
+      type: String,
     },
-   
-    password:{
-        type:String,
-        required:true,
+
+    password: {
+      type: String,
+      required: true,
     },
-    gender:{
-        type:String,
-        required:true,
-        enum:['Male','Female','Other'],
+
+    gender: {
+      type: String,
+      required: true,
+      enum: ["Male", "Female", "Other"],
     },
-    branch:{
-        type:String,
-        enum:['CS','IS','AD','AI','AT','BT','CH','CI','CY','EC','EE','EI','IM','BA','MC','MD','ME','CV']
+
+    branch: {
+      type: String,
+      enum: [
+        "CS",
+        "IS",
+        "AD",
+        "AI",
+        "AT",
+        "BT",
+        "CH",
+        "CI",
+        "CY",
+        "EC",
+        "EE",
+        "EI",
+        "IM",
+        "BA",
+        "MC",
+        "MD",
+        "ME",
+        "CV",
+      ],
     },
-    year:{
-        type:String,
-        enum:["First","Second","Third","Fourth"],
-        },
-    email:{
-        type:String,
-        required:true,
+
+    year: {
+      type: String,
+      enum: [
+        "First",
+        "Second",
+        "Third",
+        "Fourth",
+      ],
     },
-    instagram:{
-        type:String,
+
+    email: {
+      type: String,
+      required: true,
     },
-    displayPicture:{
-        type:String,
+
+    displayPicture: {
+      type: String,
     },
-    accountType:{
-        type:String,
-        enum:['Admin','Student'],
-        default:'Student'
+
+    accountType: {
+      type: String,
+      enum: ["Admin", "Student"],
+      default: "Student",
     },
-    notifications:[
-        {
-            type:mongoose.Schema.Types.ObjectId,
-            // required:true,
-            ref:"notification"
-        }
+
+    notifications: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "notification",
+      },
     ],
-    lastPostAt:{
-        type:Date
+
+    lastPostAt: {
+      type: Date,
     },
-    reports:{
-        type:Number,
-        default:0,
+
+    reports: {
+      type: Number,
+      default: 0,
     },
-    token:{
-        type:String
+
+    token: {
+      type: String,
     },
-    posts:[
-        {
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"post"
-        }
+
+    posts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "post",
+      },
     ],
-    likes:[
-        {
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"like"
-        }
+
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "like",
+      },
     ],
-    comments:[
-        {
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"comment"
-        }
+
+    comments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "comment",
+      },
     ],
-    replies:[
-        {
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"comment"
-        }
+
+    replies: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "comment",
+      },
     ],
-    },
-    {
-        timestamps: true
-    }
+  },
+
+  {
+    timestamps: true,
+  }
 );
 
-
-module.exports=mongoose.model("user",UserSchema);
+module.exports = mongoose.model("user", UserSchema);
