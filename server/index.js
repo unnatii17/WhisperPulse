@@ -6,7 +6,9 @@ require("events").EventEmitter.defaultMaxListeners = 0;
 const dotenv = require("dotenv");
 dotenv.config();
 
+// =========================
 // Routes
+// =========================
 const userRoutes = require("./routes/User");
 const postRoutes = require("./routes/Post");
 const likeRoutes = require("./routes/Like");
@@ -15,11 +17,15 @@ const replyRoutes = require("./routes/Reply");
 const feedbackRoutes = require("./routes/Feedback");
 const notificationRoutes = require("./routes/Notification");
 
+// =========================
 // Configs
+// =========================
 const database = require("./configs/database");
 const { cloudinaryConnect } = require("./configs/cloudinary");
 
+// =========================
 // Middleware
+// =========================
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const fileUpload = require("express-fileupload");
@@ -27,12 +33,12 @@ const fileUpload = require("express-fileupload");
 const PORT = process.env.PORT || 4000;
 
 // =========================
-// Database Connection
+// Database
 // =========================
 database.connect();
 
 // =========================
-// Cloudinary Connection
+// Cloudinary
 // =========================
 cloudinaryConnect();
 
@@ -46,24 +52,16 @@ app.use(cookieParser());
 // =========================
 // CORS
 // =========================
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-    ],
-  })
-);
+const corsOptions = {
+  origin:
+    "https://whisper-pulse-mnle43gio-unnati7200-1765s-projects.vercel.app",
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// Preflight
+app.options("*", cors(corsOptions));
 
 // =========================
 // File Upload
@@ -102,5 +100,3 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`App is running at ${PORT}`);
 });
-
-
