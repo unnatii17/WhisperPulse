@@ -1,46 +1,56 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { FaBullseye, FaEye, FaHeart, FaCode, FaUsers, FaLightbulb, FaLayerGroup } from "react-icons/fa";
+import {
+  FaBullseye,
+  FaEye,
+  FaLightbulb,
+  FaLayerGroup,
+} from "react-icons/fa";
 
 const AboutMission = () => {
   const cards = [
     {
-      icon: <FaBullseye className="text-2xl text-pink-500" />,
+      icon: <FaBullseye className="text-pink-500 text-xl" />,
       title: "Our Mission",
-      description: "Creating a positive digital sanctuary where genuine stories connect people meaningfully without toxic algorithms.",
+      description:
+        "Creating a positive digital sanctuary where genuine stories connect people meaningfully without toxic algorithms.",
       border: "border-pink-500/30",
-      glow: "hover:shadow-pink-500/10"
+      glow: "hover:shadow-pink-500/10",
     },
     {
-      icon: <FaEye className="text-2xl text-purple-500" />,
+      icon: <FaEye className="text-purple-500 text-xl" />,
       title: "Our Vision",
-      description: "A world where self-expression is celebrated, artwork is rewarded, and privacy is respected by design.",
+      description:
+        "A world where self-expression is celebrated, artwork is rewarded, and privacy is respected by design.",
       border: "border-purple-500/30",
-      glow: "hover:shadow-purple-500/10"
+      glow: "hover:shadow-purple-500/10",
     },
     {
-      icon: <FaLightbulb className="text-2xl text-amber-500" />,
+      icon: <FaLightbulb className="text-amber-500 text-xl" />,
       title: "Core Values",
-      description: "Community first, total transparency, elegant design, and relentless commitment to clean engineering.",
+      description:
+        "Community first, total transparency, elegant design, and relentless commitment to clean engineering.",
       border: "border-amber-500/30",
-      glow: "hover:shadow-amber-500/10"
+      glow: "hover:shadow-amber-500/10",
     },
     {
-      icon: <FaLayerGroup className="text-2xl text-indigo-500" />,
+      icon: <FaLayerGroup className="text-indigo-500 text-xl" />,
       title: "Tech Stack",
-      description: "Powered by React, Redux, Node.js, Express, Firebase Firestore & Tailwind CSS for liquid-smooth performance.",
+      description:
+        "Powered by React, Redux, Node.js, Express, Firebase Firestore & Tailwind CSS for liquid-smooth performance.",
       border: "border-indigo-500/30",
-      glow: "hover:shadow-indigo-500/10"
-    }
+      glow: "hover:shadow-indigo-500/10",
+    },
   ];
 
   return (
-    <section className="py-4">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
+    <section className="py-16 px-4">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
           Why WhisperPulse Exists ✨
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+
+        <p className="mt-4 text-gray-600 dark:text-gray-300">
           Designed with purpose, built with passion.
         </p>
       </div>
@@ -59,9 +69,11 @@ const AboutMission = () => {
             <div className="p-3 w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-700/60 flex items-center justify-center mb-4 border border-gray-100 dark:border-gray-600">
               {card.icon}
             </div>
+
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
               {card.title}
             </h3>
+
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
               {card.description}
             </p>
