@@ -1,82 +1,64 @@
-import { setLoading, setToken } from "../../slices/authSlice";
-import { setUser } from "../../slices/profileSlice";
-import { setDevice } from "../../slices/notificationSlice";
+const User = require("../models/User");
+const OTP = require("../models/OTP");
+const otpGenerator = require("otp-generator");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const mailSender = require("../utils/mailSender");
+require("dotenv").config();
 
-import { apiConnector } from "../apiConnector";
-import { authEndpoints } from "../api";
+const { uploadImageToCloudinary } = require("../utils/imageUploader");
+const { passwordUpdated } = require("../mail/templates/passwordUpdate");
+const { cloudinaryConnect } = require("../configs/cloudinary");
+const welcomeTemplate = require("../mail/templates/newJoining");
 
-import { toast } from "react-hot-toast";
-
-const {
-  LOGIN_API,
-  SENDOTP_API,
-  SIGNUP_API,
-  RESETPASSWORD_API,
-  RESETPASSTOKEN_API,
-  VALIDATE_SIGNUP,
-} = authEndpoints;
+const admin = require("firebase-admin");
 
 
 // ======================================================
-// VALIDATE SIGNUP
+// FIREBASE INITIALIZATION
 // ======================================================
 
-export function validateSignup(email, username, usn) {
-  return async (dispatch) => {
-    try {
-      if (!email || !username || !usn) {
-        toast.error("Email, username and USN are required");
-        return false;
-      }
+if (!admin.apps?.length) {
+  const serviceAccount = require(
+    "../configs/firebase-admin-config"
+  );
 
-      const formData = new FormData();
+  admin.initializeApp({
+    credential: admin.credential.cert(
+      serviceAccount
+    ),
+  });
+}
 
-      formData.append("email", email);
-      formData.append("username", username);
-      formData.append("usn", usn);
 
-      const response = await apiConnector(
-        "POST",
-        VALIDATE_SIGNUP,
-        formData
-      );
+// ======================================================
+// SEND JOINING EMAIL
+// ======================================================
 
-      console.log(
-        "VALIDATE SIGNUP RESPONSE:",
-        response.data
-      );
+async function sendJoiningEmail(email, name) {
+  try {
+    const mailResponse = await mailSender(
+      email,
+      "Welcome to WhisperPulse",
+      welcomeTemplate(name)
+    );
 
-      if (!response.data?.success) {
-        toast.error(
-          response.data?.message ||
-            "Signup validation failed"
-        );
+    console.log(
+      "Joining email sent successfully:",
+      mailResponse?.messageId
+    );
 
-        return false;
-      }
+    return mailResponse;
 
-      return response.data?.flag === true;
+  } catch (error) {
+    console.error(
+      "Error occurred while sending joining email:",
+      error
+    );
 
-    } catch (error) {
-      console.error(
-        "VALIDATE SIGNUP ERROR:",
-        error
-      );
-
-      console.error(
-        "SERVER RESPONSE:",
-        error.response?.data
-      );
-
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Signup validation failed. Please try again."
-      );
-
-      return false;
-    }
-  };
+    // Don't fail signup only because welcome email failed
+    return null;
+  }
 }
 
 
@@ -84,652 +66,802 @@ export function validateSignup(email, username, usn) {
 // SEND OTP
 // ======================================================
 
-export function sendOtp(email, navigate) {
-  return async (dispatch) => {
+exports.sendotp = async (req, res) => {
+  try {
+    const { email } = req.body;
 
-    const toastId = toast.loading(
-      "Sending OTP..."
-    );
-
-    dispatch(setLoading(true));
-
-    try {
-
-      if (!email) {
-        throw new Error(
-          "Email is required"
-        );
-      }
-
-      const response = await apiConnector(
-        "POST",
-        SENDOTP_API,
-        {
-          email: email,
-        }
-      );
-
-      console.log(
-        "SEND OTP RESPONSE:",
-        response.data
-      );
-
-      if (!response.data?.success) {
-        throw new Error(
-          response.data?.message ||
-            "Failed to send OTP"
-        );
-      }
-
-      toast.success(
-        "OTP Sent Successfully"
-      );
-
-      navigate("/otp");
-
-      return true;
-
-    } catch (error) {
-
-      console.error(
-        "SEND OTP ERROR:",
-        error
-      );
-
-      console.error(
-        "SERVER RESPONSE:",
-        error.response?.data
-      );
-
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to send OTP. Please try again."
-      );
-
-      return false;
-
-    } finally {
-
-      dispatch(
-        setLoading(false)
-      );
-
-      toast.dismiss(toastId);
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
     }
-  };
-}
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
 
 
-// ======================================================
-// SIGN UP
-// ======================================================
+    // Check existing user
+    const checkUserPresent =
+      await User.findOne({
+        email: normalizedEmail,
+      });
 
-export function signUp(
-  accountType,
-  name,
-  username,
-  usn,
-  email,
-  password,
-  confirmPassword,
-  gender,
-  branch,
-  year,
-  avatar,
-  otp,
-  navigate
-) {
+    if (checkUserPresent) {
+      return res.status(415).json({
+        success: false,
+        message: "User already registered",
+      });
+    }
 
-  return async (dispatch) => {
 
-    const toastId = toast.loading(
-      "Creating account..."
+    // Generate 6 digit OTP
+    let otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      lowerCaseAlphabets: false,
+      specialChars: false,
+    });
+
+
+    // Make sure same OTP is not already present
+    let result = await OTP.findOne({
+      otp: otp,
+    });
+
+    while (result) {
+      otp = otpGenerator.generate(6, {
+        upperCaseAlphabets: false,
+        lowerCaseAlphabets: false,
+        specialChars: false,
+      });
+
+      result = await OTP.findOne({
+        otp: otp,
+      });
+    }
+
+
+    // Create OTP
+    const otpPayload = {
+      email: normalizedEmail,
+      otp: otp,
+    };
+
+    await OTP.create(otpPayload);
+
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully",
+    });
+
+  } catch (error) {
+    console.error(
+      "Error while sending OTP:",
+      error
     );
 
-    dispatch(setLoading(true));
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "Failed to send OTP",
+    });
+  }
+};
 
-    try {
 
-      // ==================================================
-      // Basic Validation
-      // ==================================================
+// ======================================================
+// SIGNUP
+// ======================================================
 
-      if (!name?.trim()) {
-        throw new Error(
-          "Name is required"
+exports.signup = async (req, res) => {
+  try {
+
+    const {
+      usn,
+      username,
+      password,
+      confirmPassword,
+      gender,
+      branch,
+      year,
+      email,
+      accountType,
+      otp,
+    } = req.body;
+
+
+    // Name
+    let name = req.body.name;
+
+    if (typeof name !== "string") {
+      return res.status(403).json({
+        success: false,
+        message: "Name is required",
+      });
+    }
+
+    name = name.trim();
+
+    if (!name) {
+      return res.status(403).json({
+        success: false,
+        message: "Name is required",
+      });
+    }
+
+    name = name.toLowerCase();
+
+
+    // Normalize values
+    const normalizedEmail =
+      typeof email === "string"
+        ? email.trim().toLowerCase()
+        : "";
+
+    const normalizedUsername =
+      typeof username === "string"
+        ? username.trim()
+        : "";
+
+    const normalizedUsn =
+      typeof usn === "string"
+        ? usn.trim()
+        : "";
+
+
+    // Avatar
+    const avatar =
+      req?.files?.avatar;
+
+
+    // ==================================================
+    // Required fields
+    // ==================================================
+
+    if (
+      !password ||
+      !confirmPassword ||
+      !normalizedEmail ||
+      !gender ||
+      !normalizedUsername ||
+      !otp
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Some fields are required!!",
+      });
+    }
+
+
+    // ==================================================
+    // Password validation
+    // ==================================================
+
+    if (
+      password !== confirmPassword
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Password and Confirm Password do not match, try again",
+      });
+    }
+
+
+    // ==================================================
+    // Check existing email
+    // ==================================================
+
+    const existingUser =
+      await User.findOne({
+        email: normalizedEmail,
+      });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "User is already registered",
+      });
+    }
+
+
+    // ==================================================
+    // Check existing username
+    // ==================================================
+
+    const existingUsername =
+      await User.findOne({
+        username: normalizedUsername,
+      });
+
+    if (existingUsername) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Username is already registered",
+      });
+    }
+
+
+    // ==================================================
+    // Check existing USN
+    // ==================================================
+
+    if (normalizedUsn) {
+      const existingUsn =
+        await User.findOne({
+          usn: normalizedUsn,
+        });
+
+      if (existingUsn) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "USN is already registered",
+        });
+      }
+    }
+
+
+    // ==================================================
+    // Verify OTP
+    // ==================================================
+
+    const recentOtp =
+      await OTP.find({
+        email: normalizedEmail,
+      })
+        .sort({
+          createdAt: -1,
+        })
+        .limit(1);
+
+
+    if (
+      recentOtp.length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP NOT FOUND",
+      });
+    }
+
+
+    if (
+      otp.toString() !==
+      recentOtp[0].otp.toString()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+
+    // ==================================================
+    // Hash Password
+    // ==================================================
+
+    const hashedPassword =
+      await bcrypt.hash(
+        password,
+        10
+      );
+
+
+    // ==================================================
+    // Upload Avatar
+    // ==================================================
+
+    let avatarUrl = "";
+
+
+    if (avatar) {
+      try {
+
+        cloudinaryConnect();
+
+        const result =
+          await uploadImageToCloudinary(
+            avatar,
+            process.env.FOLDER_NAME,
+            1000,
+            1000
+          );
+
+        avatarUrl =
+          result.secure_url;
+
+      } catch (error) {
+
+        console.error(
+          "FILE COULD NOT BE UPLOADED:",
+          error
         );
+
+        // Continue signup with default avatar
+        avatarUrl = "";
       }
 
-      if (!username?.trim()) {
-        throw new Error(
-          "Username is required"
-        );
-      }
-
-      if (!usn?.trim()) {
-        throw new Error(
-          "USN is required"
-        );
-      }
-
-      if (!email?.trim()) {
-        throw new Error(
-          "Email is required"
-        );
-      }
-
-      if (!password) {
-        throw new Error(
-          "Password is required"
-        );
-      }
-
-      if (!confirmPassword) {
-        throw new Error(
-          "Confirm Password is required"
-        );
-      }
-
-      if (
-        password !== confirmPassword
-      ) {
-        throw new Error(
-          "Password and Confirm Password do not match"
-        );
-      }
-
-      if (!gender) {
-        throw new Error(
-          "Gender is required"
-        );
-      }
-
-      if (!otp) {
-        throw new Error(
-          "OTP is required"
-        );
-      }
+    }
 
 
-      // ==================================================
-      // FormData
-      // ==================================================
+    // ==================================================
+    // Default Avatar
+    // ==================================================
 
-      const formData =
-        new FormData();
+    if (!avatarUrl) {
 
-      formData.append(
-        "accountType",
-        accountType || "Student"
-      );
+      const firstName =
+        name.split(" ")[0] || "User";
 
-      formData.append(
-        "name",
-        name.trim()
-      );
-
-      formData.append(
-        "username",
-        username.trim()
-      );
-
-      formData.append(
-        "usn",
-        usn.trim()
-      );
-
-      formData.append(
-        "email",
-        email.trim()
-      );
-
-      formData.append(
-        "password",
-        password
-      );
-
-      formData.append(
-        "confirmPassword",
-        confirmPassword
-      );
-
-      formData.append(
-        "gender",
-        gender
-      );
-
-      formData.append(
-        "branch",
-        branch || ""
-      );
-
-      formData.append(
-        "year",
-        year || ""
-      );
-
-      formData.append(
-        "otp",
-        otp
-      );
+      avatarUrl =
+        `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+          firstName
+        )}`;
+    }
 
 
-      // ==================================================
-      // Avatar
-      // ==================================================
+    // ==================================================
+    // Create User
+    // ==================================================
 
-      if (
-        avatar &&
-        avatar instanceof File
-      ) {
-        formData.append(
-          "avatar",
-          avatar
-        );
-      }
-
-
-      // ==================================================
-      // Debug
-      // ==================================================
-
-      console.log(
-        "========== SIGNUP DATA =========="
-      );
-
-      console.log({
-        accountType,
+    const user =
+      await User.create({
         name,
-        username,
-        usn,
-        email,
+
+        usn: normalizedUsn,
+
+        username:
+          normalizedUsername,
+
+        email:
+          normalizedEmail,
+
+        password:
+          hashedPassword,
+
+        accountType:
+          accountType || "Student",
+
+        displayPicture:
+          avatarUrl,
+
+        branch:
+          branch || undefined,
+
+        year:
+          year || undefined,
+
         gender,
-        branch,
-        year,
-        otp,
-        hasPassword: !!password,
-        hasConfirmPassword:
-          !!confirmPassword,
-        hasAvatar:
-          avatar instanceof File,
       });
 
 
-      // ==================================================
-      // Signup API
-      // ==================================================
+    // ==================================================
+    // Send Welcome Email
+    // ==================================================
 
-      const response =
-        await apiConnector(
-          "POST",
-          SIGNUP_API,
-          formData
-        );
+    sendJoiningEmail(
+      normalizedEmail,
+      user.name
+    );
 
 
-      console.log(
-        "SIGNUP RESPONSE:",
-        response.data
-      );
+    // ==================================================
+    // Remove used OTP
+    // ==================================================
 
-
-      if (
-        !response.data?.success
-      ) {
-        throw new Error(
-          response.data?.message ||
-            "Signup failed"
-        );
-      }
-
-
-      // ==================================================
-      // Success
-      // ==================================================
-
-      toast.success(
-        "Signup Successful"
-      );
-
-
-      // Clear temporary avatar
-      sessionStorage.removeItem(
-        "avatarBase64"
-      );
-
-      sessionStorage.removeItem(
-        "avatarName"
-      );
-
-      sessionStorage.removeItem(
-        "avatarType"
-      );
-
-
-      // Redirect
-      navigate("/");
-
-      return true;
-
-    } catch (error) {
-
+    try {
+      await OTP.deleteMany({
+        email: normalizedEmail,
+      });
+    } catch (otpDeleteError) {
       console.error(
-        "SIGNUP ERROR:",
-        error
+        "Could not delete OTP:",
+        otpDeleteError
       );
-
-      console.error(
-        "SERVER RESPONSE:",
-        error.response?.data
-      );
-
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Signup failed. Please try again."
-      );
-
-      return false;
-
-    } finally {
-
-      dispatch(
-        setLoading(false)
-      );
-
-      toast.dismiss(toastId);
     }
-  };
-}
+
+
+    // ==================================================
+    // Response
+    // ==================================================
+
+    return res.status(200).json({
+      success: true,
+      message: "Sign up Successful",
+      user,
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Error in signing up:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "User cannot be registered, please try again",
+    });
+  }
+};
 
 
 // ======================================================
 // LOGIN
 // ======================================================
 
-export function login(
-  email,
-  password,
-  navigate
-) {
+exports.login = async (req, res) => {
+  try {
 
-  return async (dispatch) => {
+    const {
+      email,
+      password,
+    } = req.body;
 
-    const toastId =
-      toast.loading(
-        "Logging in..."
+
+    // Validate
+    if (!email || !password) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "All fields are required, please try again",
+      });
+    }
+
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
+
+
+    // Find user
+    const user =
+      await User.findOne({
+        email: normalizedEmail,
+      }).populate(
+        "notifications"
       );
 
-    dispatch(setLoading(true));
 
+    if (!user) {
+      return res.status(415).json({
+        success: false,
+        message:
+          "User does not exist, Sign up first please",
+      });
+    }
+
+
+    // Check password
+    const passwordMatch =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
+
+
+    if (!passwordMatch) {
+      return res.status(415).json({
+        success: false,
+        message:
+          "Password is incorrect",
+      });
+    }
+
+
+    // JWT payload
+    const payload = {
+      email: user.email,
+      id: user._id,
+      accountType:
+        user.accountType,
+    };
+
+
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
+
+
+    // Save token
+    user.token = token;
+
+    user.password = undefined;
+
+
+    // Cookie
+    const options = {
+      expires: new Date(
+        Date.now() +
+          3 * 60 * 60 * 1000
+      ),
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+    };
+
+
+    res
+      .cookie(
+        "token",
+        token,
+        options
+      )
+      .status(200)
+      .json({
+        success: true,
+        token,
+        user,
+        message:
+          "Logged in successfully",
+      });
+
+  } catch (error) {
+
+    console.error(
+      "Login error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Login Failure, please try again",
+    });
+  }
+};
+
+
+// ======================================================
+// CHANGE PASSWORD
+// ======================================================
+
+exports.changePassword = async (
+  req,
+  res
+) => {
+
+  try {
+
+    const {
+      oldPassword,
+      newPassword,
+      userId,
+    } = req.body;
+
+
+    const uid =
+      userId || req.user.id;
+
+
+    const userDetails =
+      await User.findById(uid);
+
+
+    if (!userDetails) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+
+    // Validate old password
+    const isPasswordMatch =
+      await bcrypt.compare(
+        oldPassword,
+        userDetails.password
+      );
+
+
+    if (!isPasswordMatch) {
+      return res.status(415).json({
+        success: false,
+        message:
+          "The password is incorrect",
+      });
+    }
+
+
+    // Hash new password
+    const encryptedPassword =
+      await bcrypt.hash(
+        newPassword,
+        10
+      );
+
+
+    const updatedUserDetails =
+      await User.findByIdAndUpdate(
+        uid,
+        {
+          password:
+            encryptedPassword,
+        },
+        {
+          new: true,
+        }
+      );
+
+
+    if (!updatedUserDetails) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+
+    // Send password update email
     try {
 
-      const response =
-        await apiConnector(
-          "POST",
-          LOGIN_API,
-          {
-            email,
-            password,
-          }
-        );
-
-
-      console.log(
-        "LOGIN RESPONSE:",
-        response.data
-      );
-
-
-      if (
-        !response.data?.success
-      ) {
-        throw new Error(
-          response.data?.message ||
-            "Login failed"
-        );
-      }
-
-
-      // Token
-      dispatch(
-        setToken(
-          response.data.token
+      await mailSender(
+        updatedUserDetails.email,
+        "Password Updated - WhisperPulse",
+        passwordUpdated(
+          updatedUserDetails.email,
+          "Password updated successfully"
         )
       );
 
-
-      // User
-      const user =
-        response.data.user;
-
-
-      dispatch(
-        setUser(user)
-      );
-
-
-      // Local Storage
-      localStorage.setItem(
-        "token",
-        response.data.token
-      );
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(user)
-      );
-
-
-      toast.success(
-        "Login Successful"
-      );
-
-
-      navigate("/feed");
-
     } catch (error) {
 
       console.error(
-        "LOGIN ERROR:",
+        "Error occurred while sending email:",
         error
       );
 
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Login failed. Please try again."
-      );
-
-    } finally {
-
-      dispatch(
-        setLoading(false)
-      );
-
-      toast.dismiss(toastId);
+      // Don't fail password update
+      // because email failed
     }
-  };
-}
 
 
-// ======================================================
-// RESET PASSWORD
-// ======================================================
+    return res.status(200).json({
+      success: true,
+      message:
+        "Password updated successfully",
+    });
 
-export function resetPassword(
-  password,
-  confirmPassword,
-  token,
-  navigate
-) {
+  } catch (error) {
 
-  return async (dispatch) => {
-
-    const toastId =
-      toast.loading(
-        "Resetting password..."
-      );
-
-    dispatch(setLoading(true));
-
-    try {
-
-      if (
-        password !==
-        confirmPassword
-      ) {
-        throw new Error(
-          "Passwords do not match"
-        );
-      }
-
-      const response =
-        await apiConnector(
-          "POST",
-          RESETPASSWORD_API,
-          {
-            password,
-            confirmPassword,
-            token,
-          }
-        );
-
-
-      if (
-        !response.data?.success
-      ) {
-        throw new Error(
-          response.data?.message ||
-            "Password reset failed"
-        );
-      }
-
-
-      toast.success(
-        "Password Reset Successfully"
-      );
-
-      navigate("/");
-
-    } catch (error) {
-
-      console.error(
-        "RESET PASSWORD ERROR:",
-        error
-      );
-
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Password reset failed."
-      );
-
-    } finally {
-
-      dispatch(
-        setLoading(false)
-      );
-
-      toast.dismiss(toastId);
-    }
-  };
-}
-
-
-// ======================================================
-// LOGOUT
-// ======================================================
-
-export function logout(navigate) {
-
-  return async (dispatch) => {
-
-    dispatch(setToken(null));
-
-    dispatch(setUser(null));
-
-    dispatch(setDevice(null));
-
-    localStorage.clear();
-
-    sessionStorage.clear();
-
-    toast.success(
-      "Logged Out"
+    console.error(
+      "Error occurred while updating password:",
+      error
     );
 
-    navigate("/");
-  };
-}
+    return res.status(500).json({
+      success: false,
+      message:
+        "Error occurred while updating password",
+      error: error.message,
+    });
+  }
+};
 
 
 // ======================================================
-// GET PASSWORD RESET TOKEN
+// VALIDATE SIGNUP
 // ======================================================
 
-export function getPasswordResetToken(
-  email,
-  setEmailSent
-) {
+exports.validateSignup = async (
+  req,
+  res
+) => {
 
-  return async (dispatch) => {
+  try {
 
-    dispatch(setLoading(true));
-
-    try {
-
-      if (!email) {
-        throw new Error(
-          "Email is required"
-        );
-      }
-
-      const response =
-        await apiConnector(
-          "POST",
-          RESETPASSTOKEN_API,
-          {
-            email,
-          }
-        );
+    const {
+      email,
+      username,
+      usn,
+    } = req.body;
 
 
-      if (
-        !response.data?.success
-      ) {
-        throw new Error(
-          response.data?.message ||
-            "Failed to send reset email"
-        );
-      }
-
-
-      toast.success(
-        "Reset Email Sent"
-      );
-
-      setEmailSent(true);
-
-    } catch (error) {
-
-      console.error(
-        "RESET TOKEN ERROR:",
-        error
-      );
-
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to send reset email."
-      );
-
-    } finally {
-
-      dispatch(
-        setLoading(false)
-      );
+    if (
+      !email ||
+      !username ||
+      !usn
+    ) {
+      return res.status(400).json({
+        success: false,
+        flag: false,
+        message:
+          "Email, username and USN are required",
+      });
     }
-  };
-}
+
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
+
+    const normalizedUsername =
+      username.trim();
+
+    const normalizedUsn =
+      usn.trim();
+
+
+    // Check email
+    const checkUserPresent =
+      await User.findOne({
+        email: normalizedEmail,
+      });
+
+
+    if (checkUserPresent) {
+      return res.status(200).json({
+        success: true,
+        flag: false,
+        message:
+          "User already registered with this email",
+      });
+    }
+
+
+    // Check username
+    const checkUsername =
+      await User.findOne({
+        username:
+          normalizedUsername,
+      });
+
+
+    if (checkUsername) {
+      return res.status(200).json({
+        success: true,
+        flag: false,
+        message:
+          "Username already taken",
+      });
+    }
+
+
+    // Check USN
+    const checkUsn =
+      await User.findOne({
+        usn: normalizedUsn,
+      });
+
+
+    if (checkUsn) {
+      return res.status(200).json({
+        success: true,
+        flag: false,
+        message:
+          "USN already registered",
+      });
+    }
+
+
+    return res.status(200).json({
+      success: true,
+      flag: true,
+      message:
+        "User can be registered",
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Error while validating signup:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      flag: false,
+      message:
+        error.message ||
+        "Signup validation failed",
+    });
+  }
+};
