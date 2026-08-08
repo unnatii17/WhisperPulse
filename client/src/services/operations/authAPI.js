@@ -1,13 +1,11 @@
-import { toast } from "react-hot-toast";
-
 import { setLoading, setToken } from "../../slices/authSlice";
 import { setUser } from "../../slices/profileSlice";
-import { apiConnector } from "../apiConnector";
-import { authEndpoints } from "../api";
 import { setDevice } from "../../slices/notificationSlice";
 
-// import { auth } from "../../firebase";
-// import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { apiConnector } from "../apiConnector";
+import { authEndpoints } from "../api";
+
+import { toast } from "react-hot-toast";
 
 const {
   LOGIN_API,
@@ -25,43 +23,59 @@ const {
 
 export function validateSignup(email, username, usn) {
   return async (dispatch) => {
-    let result = true;
-
     try {
+      if (!email || !username || !usn) {
+        toast.error("Email, username and USN are required");
+        return false;
+      }
+
       const formData = new FormData();
 
-      formData.append("email", email);
-      formData.append("username", username);
-      formData.append("usn", usn);
+      formData.append("email", email.trim());
+      formData.append("username", username.trim());
+      formData.append("usn", usn.trim());
 
-      // DO NOT manually send Content-Type for FormData
       const response = await apiConnector(
         "POST",
         VALIDATE_SIGNUP,
         formData
       );
 
-      result = response.data.flag;
-
-      if (!response.data.success) {
-        throw new Error(response.data.message);
-      }
-    } catch (err) {
       console.log(
-        "validateSignup API ERROR............",
-        err
+        "VALIDATE SIGNUP RESPONSE:",
+        response.data
+      );
+
+      if (!response.data?.success) {
+        toast.error(
+          response.data?.message ||
+            "Signup validation failed"
+        );
+
+        return false;
+      }
+
+      return response.data?.flag === true;
+
+    } catch (error) {
+      console.error(
+        "VALIDATE SIGNUP ERROR:",
+        error
+      );
+
+      console.error(
+        "SERVER RESPONSE:",
+        error.response?.data
       );
 
       toast.error(
-        err.response?.data?.message ||
-          err.message ||
+        error.response?.data?.message ||
+          error.message ||
           "Signup validation failed. Please try again."
       );
 
-      result = false;
+      return false;
     }
-
-    return result;
   };
 }
 
@@ -72,30 +86,52 @@ export function validateSignup(email, username, usn) {
 
 export function sendOtp(email, navigate) {
   return async (dispatch) => {
-    const toastId = toast.loading("Loading...");
+    const toastId = toast.loading("Sending OTP...");
 
     dispatch(setLoading(true));
 
     try {
+      if (!email?.trim()) {
+        throw new Error("Email is required");
+      }
+
       const response = await apiConnector(
         "POST",
         SENDOTP_API,
         {
-          email,
+          email: email.trim(),
         }
       );
 
-      if (!response.data.success) {
-        throw new Error(response.data.message);
+      console.log(
+        "SEND OTP RESPONSE:",
+        response.data
+      );
+
+      if (!response.data?.success) {
+        throw new Error(
+          response.data?.message ||
+            "Failed to send OTP"
+        );
       }
 
-      toast.success("OTP Sent Successfully");
+      toast.success(
+        "OTP Sent Successfully"
+      );
 
       navigate("/otp");
+
+      return true;
+
     } catch (error) {
-      console.log(
-        "SENDOTP API ERROR............",
+      console.error(
+        "SEND OTP ERROR:",
         error
+      );
+
+      console.error(
+        "SERVER RESPONSE:",
+        error.response?.data
       );
 
       toast.error(
@@ -103,10 +139,13 @@ export function sendOtp(email, navigate) {
           error.message ||
           "Failed to send OTP. Please try again."
       );
-    }
 
-    dispatch(setLoading(false));
-    toast.dismiss(toastId);
+      return false;
+
+    } finally {
+      dispatch(setLoading(false));
+      toast.dismiss(toastId);
+    }
   };
 }
 
@@ -126,51 +165,218 @@ export function signUp(
   gender,
   branch,
   year,
-  instagram,
   avatar,
   otp,
   navigate
 ) {
   return async (dispatch) => {
-    const toastId = toast.loading("Loading...");
+    const toastId = toast.loading(
+      "Creating account..."
+    );
 
     dispatch(setLoading(true));
 
     try {
+      // ------------------------------
+      // Validation
+      // ------------------------------
+
+      if (!name?.trim()) {
+        throw new Error("Name is required");
+      }
+
+      if (!username?.trim()) {
+        throw new Error("Username is required");
+      }
+
+      if (!usn?.trim()) {
+        throw new Error("USN is required");
+      }
+
+      if (!email?.trim()) {
+        throw new Error("Email is required");
+      }
+
+      if (!password) {
+        throw new Error("Password is required");
+      }
+
+      if (!confirmPassword) {
+        throw new Error(
+          "Confirm Password is required"
+        );
+      }
+
+      if (password !== confirmPassword) {
+        throw new Error(
+          "Password and Confirm Password do not match"
+        );
+      }
+
+      if (!gender) {
+        throw new Error("Gender is required");
+      }
+
+      if (!otp) {
+        throw new Error("OTP is required");
+      }
+
+      // ------------------------------
+      // FormData
+      // ------------------------------
+
       const formData = new FormData();
 
-      formData.append("accountType", accountType);
-      formData.append("name", name);
-      formData.append("username", username);
-      formData.append("email", email);
-      formData.append("password", password);
-      formData.append("confirmPassword", confirmPassword);
-      formData.append("gender", gender);
-      formData.append("branch", branch);
-      formData.append("year", year);
-      formData.append("instagram", instagram);
-      formData.append("avatar", avatar);
-      formData.append("otp", otp);
-      formData.append("usn", usn);
+      formData.append(
+        "accountType",
+        accountType || "Student"
+      );
 
-      // DO NOT manually send Content-Type for FormData
+      formData.append(
+        "name",
+        name.trim()
+      );
+
+      formData.append(
+        "username",
+        username.trim()
+      );
+
+      formData.append(
+        "usn",
+        usn.trim()
+      );
+
+      formData.append(
+        "email",
+        email.trim()
+      );
+
+      formData.append(
+        "password",
+        password
+      );
+
+      formData.append(
+        "confirmPassword",
+        confirmPassword
+      );
+
+      formData.append(
+        "gender",
+        gender
+      );
+
+      if (branch) {
+        formData.append(
+          "branch",
+          branch
+        );
+      }
+
+      if (year) {
+        formData.append(
+          "year",
+          year
+        );
+      }
+
+      formData.append(
+        "otp",
+        otp
+      );
+
+      // ------------------------------
+      // Avatar
+      // ------------------------------
+
+      if (
+        avatar &&
+        typeof File !== "undefined" &&
+        avatar instanceof File
+      ) {
+        formData.append(
+          "avatar",
+          avatar
+        );
+      }
+
+      console.log(
+        "========== SIGNUP DATA =========="
+      );
+
+      console.log({
+        accountType,
+        name,
+        username,
+        usn,
+        email,
+        gender,
+        branch,
+        year,
+        otp,
+        hasPassword: !!password,
+        hasConfirmPassword: !!confirmPassword,
+        hasAvatar:
+          typeof File !== "undefined" &&
+          avatar instanceof File,
+      });
+
+      // ------------------------------
+      // Signup API
+      // ------------------------------
+
       const response = await apiConnector(
         "POST",
         SIGNUP_API,
         formData
       );
 
-      if (!response.data.success) {
-        throw new Error(response.data.message);
+      console.log(
+        "SIGNUP RESPONSE:",
+        response.data
+      );
+
+      if (!response.data?.success) {
+        throw new Error(
+          response.data?.message ||
+            "Signup failed"
+        );
       }
 
-      toast.success("Signup Successful");
+      // ------------------------------
+      // Success
+      // ------------------------------
+
+      toast.success(
+        "Signup Successful"
+      );
+
+      sessionStorage.removeItem(
+        "avatarBase64"
+      );
+
+      sessionStorage.removeItem(
+        "avatarName"
+      );
+
+      sessionStorage.removeItem(
+        "avatarType"
+      );
 
       navigate("/");
+
+      return true;
+
     } catch (error) {
-      console.log(
-        "SIGNUP API ERROR............",
+      console.error(
+        "SIGNUP ERROR:",
         error
+      );
+
+      console.error(
+        "SERVER RESPONSE:",
+        error.response?.data
       );
 
       toast.error(
@@ -179,11 +385,12 @@ export function signUp(
           "Signup failed. Please try again."
       );
 
-      navigate("/signup");
-    }
+      return false;
 
-    dispatch(setLoading(false));
-    toast.dismiss(toastId);
+    } finally {
+      dispatch(setLoading(false));
+      toast.dismiss(toastId);
+    }
   };
 }
 
@@ -192,75 +399,89 @@ export function signUp(
 // LOGIN
 // ======================================================
 
-export function login(email, password, navigate) {
+export function login(
+  email,
+  password,
+  navigate
+) {
   return async (dispatch) => {
-    const toastId = toast.loading("Loading...");
+    const toastId = toast.loading(
+      "Logging in..."
+    );
 
     dispatch(setLoading(true));
 
     try {
+      if (!email?.trim()) {
+        throw new Error("Email is required");
+      }
+
+      if (!password) {
+        throw new Error("Password is required");
+      }
+
       const response = await apiConnector(
         "POST",
         LOGIN_API,
         {
-          email,
+          email: email.trim(),
           password,
         }
       );
 
-      if (!response.data.success) {
-        throw new Error(response.data.message);
+      console.log(
+        "LOGIN RESPONSE:",
+        response.data
+      );
+
+      if (!response.data?.success) {
+        throw new Error(
+          response.data?.message ||
+            "Login failed"
+        );
       }
 
-      toast.success("Login Successful");
+      const token =
+        response.data.token;
 
-      dispatch(setToken(response.data.token));
+      const user =
+        response.data.user;
 
-      const userImage = response.data.user.image;
-
-      dispatch(
-        setUser({
-          ...response.data.user,
-          image: userImage,
-        })
-      );
+      dispatch(setToken(token));
+      dispatch(setUser(user));
 
       localStorage.setItem(
         "token",
-        response.data.token
+        token
       );
 
       localStorage.setItem(
         "user",
-        JSON.stringify(response.data.user)
+        JSON.stringify(user)
       );
 
-      // Firebase login if needed
-      // const loggedUser =
-      //   await signInWithEmailAndPassword(
-      //     auth,
-      //     email,
-      //     password
-      //   );
+      toast.success(
+        "Login Successful"
+      );
 
       navigate("/feed");
+
     } catch (error) {
-      console.log(
-        "LOGIN API ERROR............",
+      console.error(
+        "LOGIN ERROR:",
         error
       );
 
       toast.error(
-        `Login Failed ${
-          error.response?.data?.message ||
+        error.response?.data?.message ||
           error.message ||
-          "Please try again."
-        }`
+          "Login failed. Please try again."
       );
-    }
 
-    dispatch(setLoading(false));
-    toast.dismiss(toastId);
+    } finally {
+      dispatch(setLoading(false));
+      toast.dismiss(toastId);
+    }
   };
 }
 
@@ -276,11 +497,31 @@ export function resetPassword(
   navigate
 ) {
   return async (dispatch) => {
-    const toastId = toast.loading("Loading...");
+    const toastId = toast.loading(
+      "Resetting password..."
+    );
 
     dispatch(setLoading(true));
 
     try {
+      if (!password) {
+        throw new Error(
+          "Password is required"
+        );
+      }
+
+      if (!confirmPassword) {
+        throw new Error(
+          "Confirm Password is required"
+        );
+      }
+
+      if (password !== confirmPassword) {
+        throw new Error(
+          "Passwords do not match"
+        );
+      }
+
       const response = await apiConnector(
         "POST",
         RESETPASSWORD_API,
@@ -291,8 +532,11 @@ export function resetPassword(
         }
       );
 
-      if (!response.data.success) {
-        throw new Error(response.data.message);
+      if (!response.data?.success) {
+        throw new Error(
+          response.data?.message ||
+            "Password reset failed"
+        );
       }
 
       toast.success(
@@ -300,9 +544,10 @@ export function resetPassword(
       );
 
       navigate("/");
+
     } catch (error) {
-      console.log(
-        "RESETPASSWORD ERROR............",
+      console.error(
+        "RESET PASSWORD ERROR:",
         error
       );
 
@@ -311,10 +556,11 @@ export function resetPassword(
           error.message ||
           "Password reset failed."
       );
-    }
 
-    toast.dismiss(toastId);
-    dispatch(setLoading(false));
+    } finally {
+      dispatch(setLoading(false));
+      toast.dismiss(toastId);
+    }
   };
 }
 
@@ -329,10 +575,10 @@ export function logout(navigate) {
     dispatch(setUser(null));
     dispatch(setDevice(null));
 
-    localStorage.clear();
-    sessionStorage.clear();
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
-    // await signOut(auth);
+    sessionStorage.clear();
 
     toast.success("Logged Out");
 
@@ -342,7 +588,7 @@ export function logout(navigate) {
 
 
 // ======================================================
-// GET PASSWORD RESET TOKEN
+// PASSWORD RESET TOKEN
 // ======================================================
 
 export function getPasswordResetToken(
@@ -353,24 +599,36 @@ export function getPasswordResetToken(
     dispatch(setLoading(true));
 
     try {
+      if (!email?.trim()) {
+        throw new Error(
+          "Email is required"
+        );
+      }
+
       const response = await apiConnector(
         "POST",
         RESETPASSTOKEN_API,
         {
-          email,
+          email: email.trim(),
         }
       );
 
-      if (!response.data.success) {
-        throw new Error(response.data.message);
+      if (!response.data?.success) {
+        throw new Error(
+          response.data?.message ||
+            "Failed to send reset email"
+        );
       }
 
-      toast.success("Reset Email Sent");
+      toast.success(
+        "Reset Email Sent"
+      );
 
       setEmailSent(true);
+
     } catch (error) {
-      console.log(
-        "Reset password token error",
+      console.error(
+        "RESET TOKEN ERROR:",
         error
       );
 
@@ -379,8 +637,9 @@ export function getPasswordResetToken(
           error.message ||
           "Failed to send reset email."
       );
-    }
 
-    dispatch(setLoading(false));
+    } finally {
+      dispatch(setLoading(false));
+    }
   };
 }
