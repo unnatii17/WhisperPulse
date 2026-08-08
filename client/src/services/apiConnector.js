@@ -10,6 +10,7 @@ export const axiosInstance = axios.create({
 
 axiosInstance.interceptors.response.use(
   (response) => response,
+
   (error) => {
     if (error.response && error.response.status === 401) {
       const toastId = toast.loading("Session expired, logging out...");
@@ -30,12 +31,28 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export const apiConnector = (method, url, bodyData, headers, params) => {
+export const apiConnector = (
+  method,
+  url,
+  bodyData,
+  headers,
+  params
+) => {
+  // Handle both:
+  // { "Content-Type": "application/json" }
+  // and
+  // { headers: { "Content-Type": "application/json" } }
+
+  const finalHeaders =
+    headers?.headers && typeof headers.headers === "object"
+      ? headers.headers
+      : headers || {};
+
   return axiosInstance({
-    method,
-    url,
+    method: method,
+    url: url,
     data: bodyData || null,
-    headers: headers || {},
+    headers: finalHeaders,
     params: params || {},
   });
 };
