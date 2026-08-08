@@ -1,39 +1,52 @@
-const mongoose=require('mongoose');
-const mailSender=require('../utils/mailSender');
-const otpTemplate=require('../mail/templates/emailVerificationTemplate');
+const mongoose = require("mongoose");
+const mailSender = require("../utils/mailSender");
+const otpTemplate = require("../mail/templates/emailVerificationTemplate");
 
-const otpSchema=new mongoose.Schema({
-    email:{
-        type:String,
-        required:true,
-    },
-    otp:{
-        type:String,
-        required:true,
-    },
-    createdAt:{
-        type:Date,
-        default:Date.now,
-        expires:20*60*1000,
-    }
+const otpSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+  },
+  otp: {
+    type: String,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: 20 * 60,
+  },
 });
 
-//this is a function to send emails
-async function sendVerificationEmail(email,otp){
-    try{
-        const mailResponse=await mailSender(email,"Verification Email from WhisperPulse",otpTemplate(otp));
-    }
-    catch(error){
-        console.log("Error occured while sending mails:",error);
-        throw error;
-    }
+// Send Verification Email
+async function sendVerificationEmail(email, otp) {
+  try {
+    const mailResponse = await mailSender(
+      email,
+      "Verification Email from WhisperPulse",
+      otpTemplate(otp)
+    );
+
+    console.log("OTP Mail Sent Successfully");
+    return mailResponse;
+  } catch (error) {
+    console.error("MAIL ERROR:", error);
+
+    // IMPORTANT:
+    // Email fail hone par OTP save hone do
+    return null;
+  }
 }
 
-//this is a pre save middleware for otp
-otpSchema.pre("save",async function(next){
-    await sendVerificationEmail(this.email,this.otp);
-    next();
-})
+// Pre Save Middleware
+otpSchema.pre("save", async function (next) {
+  try {
+    await sendVerificationEmail(this.email, this.otp);
+  } catch (err) {
+    console.error("OTP Email Error:", err);
+  }
 
+  next();
+});
 
-module.exports=mongoose.model("OTP",otpSchema);
+module.exports = mongoose.model("OTP", otpSchema);
