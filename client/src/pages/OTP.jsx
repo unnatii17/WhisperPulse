@@ -1,14 +1,15 @@
 import React, { Suspense, useEffect, useState } from "react";
-import Submitbutton from "../components/common/SubmitButton";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { FaClockRotateLeft } from "react-icons/fa6";
 import { Spinner } from "flowbite-react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import OTPInput from "react-otp-input";
-import { signUp } from "../services/operations/authAPI";
-import Loader from "../components/common/Loader";
 import { toast } from "react-hot-toast";
+
+import Submitbutton from "../components/common/SubmitButton";
+import Loader from "../components/common/Loader";
+import { signUp, sendOtp } from "../services/operations/authAPI";
 
 const OTP = () => {
   const { loading, signupData } = useSelector(
@@ -20,19 +21,25 @@ const OTP = () => {
 
   const [otp, setOtp] = useState("");
 
-  // If signup data is missing, go back to signup
+  const [resending, setResending] = useState(false);
+
+  // =====================================================
+  // CHECK SIGNUP DATA
+  // =====================================================
+
   useEffect(() => {
     if (!signupData) {
+      toast.error("Signup information not found");
       navigate("/signup");
     }
   }, [signupData, navigate]);
 
-  const handleOnSubmit = (e) => {
-    e.preventDefault();
+  // =====================================================
+  // VERIFY OTP
+  // =====================================================
 
-    // ============================================
-    // Check signup data
-    // ============================================
+  const handleOnSubmit = async (e) => {
+    e.preventDefault();
 
     if (!signupData) {
       toast.error("Signup information not found");
@@ -40,18 +47,10 @@ const OTP = () => {
       return;
     }
 
-    // ============================================
-    // Check OTP
-    // ============================================
-
     if (!otp || otp.length !== 6) {
       toast.error("Please enter the complete 6-digit OTP");
       return;
     }
-
-    // ============================================
-    // Get signup data
-    // ============================================
 
     const {
       accountType,
@@ -66,10 +65,7 @@ const OTP = () => {
       year,
     } = signupData;
 
-    // ============================================
-    // Required field validation
-    // ============================================
-
+    // Required fields
     if (!name) {
       toast.error("Name is required");
       return;
@@ -100,9 +96,9 @@ const OTP = () => {
       return;
     }
 
-    // ============================================
-    // Reconstruct Avatar File
-    // ============================================
+    // =====================================================
+    // RECONSTRUCT AVATAR
+    // =====================================================
 
     let avatarFile = null;
 
@@ -143,13 +139,12 @@ const OTP = () => {
         }
 
         avatarFile = new File(
-          [arrayBuffer],
+          [uint8Array],
           avatarName,
           {
             type: avatarType,
           }
         );
-
       } catch (error) {
         console.error(
           "Avatar reconstruction failed:",
@@ -160,34 +155,11 @@ const OTP = () => {
       }
     }
 
-    // ============================================
-    // Debug
-    // ============================================
+    // =====================================================
+    // SIGNUP
+    // =====================================================
 
-    console.log(
-      "========== OTP SIGNUP DATA =========="
-    );
-
-    console.log({
-      accountType,
-      name,
-      username,
-      usn,
-      email,
-      gender,
-      branch,
-      year,
-      otp,
-      hasPassword: !!password,
-      hasConfirmPassword: !!confirmPassword,
-      hasAvatar: avatarFile instanceof File,
-    });
-
-    // ============================================
-    // Signup
-    // ============================================
-
-    dispatch(
+    const result = await dispatch(
       signUp(
         accountType || "Student",
         name,
@@ -205,93 +177,167 @@ const OTP = () => {
       )
     );
 
-    // ============================================
-    // Remove temporary avatar data
-    // ============================================
-
-    sessionStorage.removeItem("avatarBase64");
-    sessionStorage.removeItem("avatarName");
-    sessionStorage.removeItem("avatarType");
+    // Don't remove avatar before signup request finishes
+    if (result) {
+      sessionStorage.removeItem("avatarBase64");
+      sessionStorage.removeItem("avatarName");
+      sessionStorage.removeItem("avatarType");
+    }
   };
+
+  // =====================================================
+  // RESEND OTP
+  // =====================================================
+
+  const handleResendOtp = async () => {
+    if (!signupData?.email) {
+      toast.error("Email not found");
+      navigate("/signup");
+      return;
+    }
+
+    if (resending) return;
+
+    setResending(true);
+
+    try {
+      await dispatch(
+        sendOtp(
+          signupData.email,
+          navigate
+        )
+      );
+
+      setOtp("");
+    } catch (error) {
+      console.error(
+        "RESEND OTP ERROR:",
+        error
+      );
+    } finally {
+      setResending(false);
+    }
+  };
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <Suspense fallback={<Loader />}>
-      <div className="text-white flex items-center justify-center flex-col h-[calc(100vh-56px)]">
+      <div className="min-h-screen w-full bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white flex items-center justify-center px-4 py-10">
 
         {loading ? (
-          <Spinner />
-        ) : (
-          <div className="py-12 flex-col flex gap-4 px-12 w-[90%] md:w-[420px] bg-gray-400 rounded-md bg-clip-padding backdrop-filter backdrop-blur-md bg-opacity-20 border border-gray-400">
+          <div className="flex flex-col items-center justify-center min-h-[400px]">
+            <Spinner
+              aria-label="Loading"
+              size="xl"
+            />
 
-            <h1 className="text-2xl font-bold">
-              Verify Email
-            </h1>
-
-            <p className="mb-4 text-base leading-1 text-[#ffffff]">
-              A verification code has been sent to you.
-              Enter the code below.
+            <p className="mt-4 text-gray-300">
+              Creating your account...
             </p>
+          </div>
+        ) : (
+          <div className="w-full max-w-[460px] rounded-xl border border-gray-700 bg-gray-900/95 shadow-2xl p-8 sm:p-10">
 
-            <form onSubmit={handleOnSubmit}>
+            {/* Heading */}
 
-              <OTPInput
-                className="w-full p-6 text-white"
-                value={otp}
-                onChange={setOtp}
-                numInputs={6}
-                renderSeparator={
-                  <span className="text-white">
-                    -
-                  </span>
-                }
-                renderInput={(props) => (
-                  <span className="rounded-xl text-white mx-auto px-[1px] newsmall:px-[1px] sm:px-[5px] py-[8px] border border-gray-100">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-white">
+                Verify Email
+              </h1>
+
+              <p className="mt-3 text-sm leading-6 text-gray-300">
+                A verification code has been sent to
+                your email.
+                <br />
+                Enter the 6-digit code below.
+              </p>
+            </div>
+
+            {/* OTP FORM */}
+
+            <form
+              onSubmit={handleOnSubmit}
+              className="mt-8"
+            >
+              <div className="flex justify-center">
+
+                <OTPInput
+                  value={otp}
+                  onChange={setOtp}
+                  numInputs={6}
+                  shouldAutoFocus
+                  inputType="tel"
+                  renderSeparator={
+                    <span className="mx-1 text-gray-500">
+                      -
+                    </span>
+                  }
+                  renderInput={(props) => (
                     <input
                       {...props}
-                      className="bg-transparent box-content text-white outline-none focus:ring-0 border-none"
+                      className="!w-10 h-12 sm:!w-12 sm:h-14 rounded-lg border border-gray-600 bg-gray-800 text-center text-xl font-semibold text-white outline-none transition focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30"
                     />
-                  </span>
-                )}
-              />
+                  )}
+                />
+
+              </div>
+
+              {/* Verify Button */}
 
               <Submitbutton
                 text="Verify Email"
-                customClasses="w-full mx-auto mt-10"
+                customClasses="w-full mt-8"
               />
-
             </form>
 
-            <div className="flex mt-2 justify-between items-center">
+            {/* Bottom buttons */}
+
+            <div className="flex items-center justify-between mt-8">
+
+              {/* Back */}
 
               <Link
-                className="flex text-richblack-25 justify-center items-center"
                 to="/"
+                className="flex items-center gap-1 text-gray-300 hover:text-white transition"
               >
                 <IoIosArrowRoundBack
-                  fontSize={25}
+                  fontSize={24}
                 />
 
-                <p className="text-sm group-hover:underline font-semibold">
+                <span className="text-sm font-semibold">
                   Back to login
-                </p>
+                </span>
               </Link>
+
+              {/* Resend */}
 
               <button
                 type="button"
-                className="flex gap-1 hover:underline text-[#ffffff] justify-center items-center"
+                onClick={handleResendOtp}
+                disabled={resending}
+                className={`flex items-center gap-1 text-sm font-semibold transition ${
+                  resending
+                    ? "text-gray-500 cursor-not-allowed"
+                    : "text-yellow-400 hover:text-yellow-300"
+                }`}
               >
                 <FaClockRotateLeft
                   fontSize={15}
                 />
 
-                <p className="text-sm font-semibold">
-                  Resend it
-                </p>
+                {resending
+                  ? "Sending..."
+                  : "Resend OTP"}
               </button>
 
             </div>
+
           </div>
         )}
+
       </div>
     </Suspense>
   );
