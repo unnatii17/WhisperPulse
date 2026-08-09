@@ -14,7 +14,6 @@ import {
 import { apiConnector } from "../apiConnector";
 import { postEndpoints } from "../api";
 
-
 // =====================================================
 // POST ENDPOINTS
 // =====================================================
@@ -44,37 +43,31 @@ export function getUserPosts(userId, count, token) {
         null,
         {
           Authorization: `Bearer ${token}`,
-          userId: userId,
         },
         {
+          userId: userId,
           count: count,
         }
       );
 
       if (!response?.data?.success) {
         throw new Error(
-          response?.data?.message ||
-            "Could not get user posts"
+          response?.data?.message || "Could not get user posts"
         );
       }
 
       dispatch(
-        setUserPost(
-          response?.data?.slicedPost || []
-        )
+        setUserPost(response?.data?.slicedPost || [])
       );
 
       dispatch(
-        setUserTotalPosts(
-          response?.data?.totalLength || 0
-        )
+        setUserTotalPosts(response?.data?.totalLength || 0)
       );
 
       return response.data;
-
     } catch (err) {
       console.error(
-        "GET_POST_BY_USER_API FAILED:",
+        "GET_USER_POSTS_API FAILED:",
         err
       );
 
@@ -90,8 +83,8 @@ export function getUserPosts(userId, count, token) {
 
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          "Could not get user posts"
+        err?.message ||
+        "Could not get user posts"
       );
 
       return null;
@@ -119,15 +112,14 @@ export function getUserStats(token) {
       if (!response?.data?.success) {
         throw new Error(
           response?.data?.message ||
-            "Could not get user statistics"
+          "Could not get user statistics"
         );
       }
 
       return response?.data?.data || null;
-
     } catch (err) {
       console.error(
-        "Error in Fetching User Statistics:",
+        "GET_USER_POST_STATS_API FAILED:",
         err
       );
 
@@ -143,8 +135,8 @@ export function getUserStats(token) {
 
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          "Could not get user statistics"
+        err?.message ||
+        "Could not get user statistics"
       );
 
       return null;
@@ -177,14 +169,12 @@ export function getPosts(count, token) {
       if (!response?.data?.success) {
         throw new Error(
           response?.data?.message ||
-            "Could not get all posts"
+          "Could not get all posts"
         );
       }
 
       dispatch(
-        setPost(
-          response?.data?.slicedPost || []
-        )
+        setPost(response?.data?.slicedPost || [])
       );
 
       dispatch(
@@ -194,7 +184,6 @@ export function getPosts(count, token) {
       );
 
       return response.data;
-
     } catch (err) {
       console.error(
         "GET_POST_API FAILED:",
@@ -213,12 +202,11 @@ export function getPosts(count, token) {
 
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          "Could not get all posts"
+        err?.message ||
+        "Could not get all posts"
       );
 
       return null;
-
     } finally {
       dispatch(setLoading(false));
     }
@@ -253,14 +241,12 @@ export function createPost(token, data) {
       if (!response?.data?.success) {
         throw new Error(
           response?.data?.message ||
-            "Could not create post"
+          "Could not create post"
         );
       }
 
       dispatch(
-        setPost(
-          response?.data?.posts || []
-        )
+        setPost(response?.data?.posts || [])
       );
 
       dispatch(
@@ -274,7 +260,6 @@ export function createPost(token, data) {
       );
 
       return response.data;
-
     } catch (err) {
       console.error(
         "CREATE_POST_API FAILED:",
@@ -294,7 +279,6 @@ export function createPost(token, data) {
       toast.error(message);
 
       return null;
-
     } finally {
       dispatch(setLoading(false));
     }
@@ -323,11 +307,10 @@ export function editPost(token, data) {
       if (!response?.data?.success) {
         throw new Error(
           response?.data?.message ||
-            "Could not edit the post"
+          "Could not edit the post"
         );
       }
 
-      // Update posts if backend returns them
       if (response?.data?.posts) {
         dispatch(
           setPost(response.data.posts)
@@ -339,7 +322,6 @@ export function editPost(token, data) {
       );
 
       return response.data;
-
     } catch (err) {
       console.error(
         "EDIT_POST_API FAILED:",
@@ -353,12 +335,11 @@ export function editPost(token, data) {
 
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          "Could not edit the post"
+        err?.message ||
+        "Could not edit the post"
       );
 
       return null;
-
     } finally {
       dispatch(setLoading(false));
     }
@@ -387,14 +368,12 @@ export function deletePost(token, data) {
       if (!response?.data?.success) {
         throw new Error(
           response?.data?.message ||
-            "Could not delete the post"
+          "Could not delete the post"
         );
       }
 
       dispatch(
-        setPost(
-          response?.data?.posts || []
-        )
+        setPost(response?.data?.posts || [])
       );
 
       if (
@@ -413,7 +392,6 @@ export function deletePost(token, data) {
       );
 
       return response.data;
-
     } catch (err) {
       console.error(
         "DELETE_POST_API FAILED:",
@@ -427,12 +405,11 @@ export function deletePost(token, data) {
 
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          "Could not delete the post"
+        err?.message ||
+        "Could not delete the post"
       );
 
       return null;
-
     } finally {
       dispatch(setLoading(false));
     }
@@ -461,7 +438,7 @@ export function reportPost(token, data) {
       if (!response?.data?.success) {
         throw new Error(
           response?.data?.message ||
-            "Could not report the post"
+          "Could not report the post"
         );
       }
 
@@ -476,7 +453,6 @@ export function reportPost(token, data) {
       );
 
       return response.data;
-
     } catch (err) {
       console.error(
         "REPORT_POST_API FAILED:",
@@ -490,12 +466,11 @@ export function reportPost(token, data) {
 
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          "Could not report the post"
+        err?.message ||
+        "Could not report the post"
       );
 
       return null;
-
     } finally {
       dispatch(setLoading(false));
     }
@@ -525,12 +500,11 @@ export function postExist(token, postid) {
       if (!response?.data?.success) {
         throw new Error(
           response?.data?.message ||
-            "Post not found"
+          "Post not found"
         );
       }
 
       return response?.data?.post || false;
-
     } catch (err) {
       console.error(
         "POST_EXIST_API FAILED:",
