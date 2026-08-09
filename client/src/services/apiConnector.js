@@ -9,7 +9,9 @@ export const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
 
   (error) => {
     if (error.response?.status === 401) {
@@ -36,7 +38,7 @@ axiosInstance.interceptors.response.use(
 export const apiConnector = (
   method,
   url,
-  bodyData,
+  bodyData = null,
   headers = {},
   params = {}
 ) => {
@@ -44,7 +46,7 @@ export const apiConnector = (
     method,
     url,
     data: bodyData,
-    headers,
-    params,
+    headers: headers,
+    params: params,
   });
 };
