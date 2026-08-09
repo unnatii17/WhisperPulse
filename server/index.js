@@ -53,6 +53,7 @@ cloudinaryConnect();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(cookieParser());
 
 // =========================
@@ -60,29 +61,49 @@ app.use(cookieParser());
 // =========================
 
 const allowedOrigins = [
+  // Current Vercel production domain
+  "https://whisper-pulse-seven.vercel.app",
+
+  // Previous Vercel deployment
   "https://whisper-pulse-mnle43gio-unnati7200-1765s-projects.vercel.app",
+
+  // Local development
   "http://localhost:1001",
+  "http://localhost:3000",
+  "http://localhost:5173",
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Postman / server-to-server requests
+    // Allow requests without Origin
+    // (Postman, server-to-server, etc.)
     if (!origin) {
       return callback(null, true);
     }
 
-    // Allowed frontend
+    // Exact allowed origins
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    // Allow localhost development ports
-    if (/^http:\/\/localhost:\d+$/.test(origin)) {
+    // Allow your Vercel preview deployments
+    if (
+      /^https:\/\/whisper-pulse-[a-z0-9-]+\.vercel\.app$/i.test(origin)
+    ) {
       return callback(null, true);
     }
 
+    // Allow localhost development ports
+    if (
+      /^http:\/\/localhost:\d+$/i.test(origin)
+    ) {
+      return callback(null, true);
+    }
+
+    console.log("CORS BLOCKED ORIGIN:", origin);
+
     return callback(
-      new Error("Not allowed by CORS")
+      new Error(`CORS not allowed for origin: ${origin}`)
     );
   },
 
@@ -100,10 +121,17 @@ const corsOptions = {
   allowedHeaders: [
     "Content-Type",
     "Authorization",
+    "userId",
+    "postid",
   ],
+
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options("*", cors(corsOptions));
 
 // =========================
 // File Upload
@@ -121,11 +149,17 @@ app.use(
 // =========================
 
 app.use("/api/v1/auth", userRoutes);
+
 app.use("/api/v1/post", postRoutes);
+
 app.use("/api/v1/like", likeRoutes);
+
 app.use("/api/v1/comment", commentRoutes);
+
 app.use("/api/v1/reply", replyRoutes);
+
 app.use("/api/v1/feedback", feedbackRoutes);
+
 app.use("/api/v1/notification", notificationRoutes);
 
 // =========================
@@ -139,60 +173,10 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "WhisperPulse server is healthy",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// =========================
-// Error Handler
-// =========================
-
-app.use((err, req, res, next) => {
-  console.error("SERVER ERROR:", err.message);
-
-  if (err.message === "Not allowed by CORS") {
-    return res.status(403).json({
-      success: false,
-      message: "CORS: Origin not allowed",
-    });
-  }
-
-  return res.status(500).json({
-    success: false,
-    message: "Internal server error",
-  });
-});
-
 // =========================
 // Start Server
 // =========================
 
-const server = app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, () => {
   console.log(`App is running at ${PORT}`);
-});
-
-// =========================
-// Graceful Shutdown
-// =========================
-
-process.on("SIGTERM", () => {
-  console.log("SIGTERM received. Shutting down gracefully...");
-
-  server.close(() => {
-    console.log("HTTP server closed");
-    process.exit(0);
-  });
-});
-
-process.on("SIGINT", () => {
-  console.log("SIGINT received. Shutting down...");
-
-  server.close(() => {
-    console.log("HTTP server closed");
-    process.exit(0);
-  });
 });
